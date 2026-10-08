@@ -65,11 +65,13 @@ app.use(cookieParser());
 //     allowedHeaders: ["Content-Type", "Authorization"],
 //   }),
 // );
-app.use(cors({
+app.use(
+  cors({
     origin: "*",
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
-}));
+  }),
+);
 /* ========================================== */
 /* === 2. REGISTER LOGGER MIDDLEWARES     === */
 /* ========================================== */
@@ -96,15 +98,22 @@ app.use("/api/authmngr", authmngrRoutes);
 // === SERVE REACT FRONTEND (PRODUCTION)  ===
 // ==========================================
 if (process.env.NODE_ENV === "production") {
-    // __dirname is .../dist, so ../public points to the backend root's public folder
-    const frontendDistPath = path.join(__dirname, "../public");
-    app.use(express.static(frontendDistPath));
-    // Catch-all handler: Send back React's index.html for React Router
-    app.get("*", (req, res) => {
-        res.sendFile(path.join(frontendDistPath, "index.html"));
-    });
+  const frontendDistPath = path.join(__dirname, "../public");
+
+  app.use(express.static(frontendDistPath));
+
+  app.get("*", (req, res, next) => {
+    // Let API requests continue through Express
+    if (req.path.startsWith("/api")) {
+      return next();
+    }
+
+    // All other routes are handled by React Router
+    res.sendFile(path.join(frontendDistPath, "index.html"));
+  });
 }
 // ==========================================
 app.use(errorLogger);
+
 module.exports = app;
 //# sourceMappingURL=app.js.map
